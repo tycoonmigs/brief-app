@@ -15,7 +15,7 @@ const getFileIcon = (fileName = '') => {
   return '📎';
 };
 
-const MessageBubble = ({ message, isOwn, currentAlias, onReact, onOpenFullPicker }) => {
+const MessageBubble = ({ message, isOwn, currentAlias, onReact, onOpenFullPicker, showSeen }) => {
   const [showQuickBar, setShowQuickBar] = useState(false);
   const bubbleRef = useRef(null);
   const pressTimerRef = useRef(null);
@@ -62,8 +62,6 @@ const MessageBubble = ({ message, isOwn, currentAlias, onReact, onOpenFullPicker
     setShowQuickBar(false);
   };
 
-  // built with createElement instead of JSX's <a> syntax, to avoid a copy/paste issue
-  // that keeps stripping the opening angle bracket for anchor tags specifically
   const fileAttachmentElement =
     message.type === 'file'
       ? React.createElement(
@@ -79,67 +77,71 @@ const MessageBubble = ({ message, isOwn, currentAlias, onReact, onOpenFullPicker
       : null;
 
   return (
-    <div
-      ref={bubbleRef}
-      className={`message-bubble-wrapper ${isOwn ? 'own' : 'other'}`}
-      onMouseEnter={() => setShowQuickBar(true)}
-      onMouseLeave={() => setShowQuickBar(false)}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={clearPressTimer}
-      onTouchMove={clearPressTimer}
-    >
-      {showQuickBar && (
-        <div className={`quick-reaction-bar ${isOwn ? 'align-right' : 'align-left'}`}>
-          {QUICK_REACTIONS.map((emoji) => (
-            <button key={emoji} type="button" className="quick-reaction-btn" onClick={() => handleQuickReact(emoji)}>
-              {emoji}
-            </button>
-          ))}
-          <button
-            type="button"
-            className="quick-reaction-more"
-            onClick={() => {
-              onOpenFullPicker(message.id);
-              setShowQuickBar(false);
-            }}
-          >
-            +
-          </button>
-        </div>
-      )}
-
-      <div className={`message-bubble ${isOwn ? 'own' : 'other'}`}>
-        <span className="alias">{message.alias}</span>
-
-        {message.type === 'image' && (
-          <img
-            src={message.content}
-            alt="shared"
-            className="message-image"
-            draggable="false"
-            onContextMenu={(e) => e.preventDefault()}
-          />
-        )}
-
-        {message.type === 'file' && fileAttachmentElement}
-
-        {message.type === 'text' && <p className="content">{message.content}</p>}
-
-        {Object.keys(grouped).length > 0 && (
-          <div className="reaction-summary">
-            {Object.entries(grouped).map(([emoji, aliases]) => (
-              <button
-                key={emoji}
-                type="button"
-                className={`reaction-chip ${aliases.includes(currentAlias) ? 'active' : ''}`}
-                onClick={() => onReact(message.id, emoji)}
-              >
-                {emoji} <span className="reaction-count">{aliases.length}</span>
+    <div className={`message-group ${isOwn ? 'own' : 'other'}`}>
+      <div
+        ref={bubbleRef}
+        className={`message-bubble-wrapper ${isOwn ? 'own' : 'other'}`}
+        onMouseEnter={() => setShowQuickBar(true)}
+        onMouseLeave={() => setShowQuickBar(false)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={clearPressTimer}
+        onTouchMove={clearPressTimer}
+      >
+        {showQuickBar && (
+          <div className={`quick-reaction-bar ${isOwn ? 'align-right' : 'align-left'}`}>
+            {QUICK_REACTIONS.map((emoji) => (
+              <button key={emoji} type="button" className="quick-reaction-btn" onClick={() => handleQuickReact(emoji)}>
+                {emoji}
               </button>
             ))}
+            <button
+              type="button"
+              className="quick-reaction-more"
+              onClick={() => {
+                onOpenFullPicker(message.id);
+                setShowQuickBar(false);
+              }}
+            >
+              +
+            </button>
           </div>
         )}
+
+        <div className={`message-bubble ${isOwn ? 'own' : 'other'}`}>
+          <span className="alias">{message.alias}</span>
+
+          {message.type === 'image' && (
+            <img
+              src={message.content}
+              alt="shared"
+              className="message-image"
+              draggable="false"
+              onContextMenu={(e) => e.preventDefault()}
+            />
+          )}
+
+          {message.type === 'file' && fileAttachmentElement}
+
+          {message.type === 'text' && <p className="content">{message.content}</p>}
+
+          {Object.keys(grouped).length > 0 && (
+            <div className="reaction-summary">
+              {Object.entries(grouped).map(([emoji, aliases]) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  className={`reaction-chip ${aliases.includes(currentAlias) ? 'active' : ''}`}
+                  onClick={() => onReact(message.id, emoji)}
+                >
+                  {emoji} <span className="reaction-count">{aliases.length}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
+      {showSeen && <div className="seen-label">seen</div>}
     </div>
   );
 };

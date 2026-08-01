@@ -197,20 +197,33 @@
   padding: 0 0.5rem;
 }
 
-/* message bubble wrapper — needed so the popover can position outside the bubble */
-.message-bubble-wrapper {
-  position: relative;
+.message-group {
   display: flex;
+  flex-direction: column;
   max-width: 70%;
 }
 
-.message-bubble-wrapper.own {
+.message-group.own {
   align-self: flex-end;
+  align-items: flex-end;
+}
+
+.message-group.other {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.message-bubble-wrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+}
+
+.message-bubble-wrapper.own {
   justify-content: flex-end;
 }
 
 .message-bubble-wrapper.other {
-  align-self: flex-start;
   justify-content: flex-start;
 }
 
@@ -577,7 +590,5 @@
 .seen-label {
   font-size: 0.65rem;
   color: var(--color-text-dim);
-  text-align: right;
-  margin-top: 0.15rem;
-  padding-right: 0.25rem;
+  margin-top: 0.1rem;
 }

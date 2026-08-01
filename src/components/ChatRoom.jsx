@@ -44,7 +44,6 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, creatorToken, o
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typingUser]);
 
-  // whenever the message list changes, tell the other person we've seen up to the latest message
   useEffect(() => {
     if (!socket || messages.length === 0) return;
     const lastRealMessage = [...messages].reverse().find((m) => m.type !== 'system');
@@ -193,8 +192,6 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, creatorToken, o
     );
   }
 
-  // find the LAST own message that matches the other person's last-seen id,
-  // so "seen" only shows once, under the most recent applicable message
   const lastOwnMessageIndex = [...messages]
     .map((m, i) => ({ ...m, i }))
     .reverse()
@@ -228,16 +225,15 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, creatorToken, o
 
         <div className="messages">
           {messages.map((msg, i) => (
-            <div key={msg.id || i}>
-              <MessageBubble
-                message={msg}
-                isOwn={msg.alias === alias}
-                currentAlias={alias}
-                onReact={handleReact}
-                onOpenFullPicker={setReactingMessageId}
-              />
-              {i === lastOwnMessageIndex && <div className="seen-label">seen</div>}
-            </div>
+            <MessageBubble
+              key={msg.id || i}
+              message={msg}
+              isOwn={msg.alias === alias}
+              currentAlias={alias}
+              onReact={handleReact}
+              onOpenFullPicker={setReactingMessageId}
+              showSeen={i === lastOwnMessageIndex}
+            />
           ))}
           <div ref={messagesEndRef} />
         </div>
