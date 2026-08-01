@@ -13,7 +13,6 @@ import EmojiPicker from './EmojiPicker.jsx';
 import { playNotificationSound } from '../utils/notificationSound.js';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
-
 const ALLOWED_FILE_EXTENSIONS = '.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip';
 
 const fileToBase64 = (file) =>
@@ -35,6 +34,7 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, creatorToken, o
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [reactingMessageId, setReactingMessageId] = useState(null);
   const [showTerminateConfirm, setShowTerminateConfirm] = useState(false);
+  const [otherLastSeenId, setOtherLastSeenId] = useState(null);
   const typingTimeoutRef = useRef(null);
   const messagesEndRef = useRef(null);
 
@@ -43,6 +43,15 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, creatorToken, o
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typingUser]);
+
+  // whenever the message list changes, tell the other person we've seen up to the latest message
+  useEffect(() => {
+    if (!socket || messages.length === 0) return;
+    const lastRealMessage = [...messages].reverse().find((m) => m.type !== 'system');
+    if (lastRealMessage) {
+      socket.emit('markSeen', { lastSeenMessageId: lastRealMessage.id });
+    }
+  }, [messages, socket]);
 
   useEffect(() => {
     if (!socket) return;
@@ -64,6 +73,9 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, creatorToken, o
     const handleReactionUpdate = ({ messageId, reactions }) => {
       setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, reactions } : m)));
     };
+    const handleSeenUpdate = ({ lastSeenMessageId }) => {
+      setOtherLastSeenId(lastSeenMessageId);
+    };
 
     socket.on('newMessage', handleNewMessage);
     socket.on('userTyping', handleUserTyping);
@@ -73,6 +85,7 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, creatorToken, o
     socket.on('roomTerminated', handleRoomTerminated);
     socket.on('errorMessage', handleErrorMessage);
     socket.on('reactionUpdate', handleReactionUpdate);
+    socket.on('seenUpdate', handleSeenUpdate);
 
     return () => {
       socket.off('newMessage', handleNewMessage);
@@ -83,6 +96,7 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, creatorToken, o
       socket.off('roomTerminated', handleRoomTerminated);
       socket.off('errorMessage', handleErrorMessage);
       socket.off('reactionUpdate', handleReactionUpdate);
+      socket.off('seenUpdate', handleSeenUpdate);
     };
   }, [socket, alias]);
 
@@ -179,6 +193,13 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, creatorToken, o
     );
   }
 
+  // find the LAST own message that matches the other person's last-seen id,
+  // so "seen" only shows once, under the most recent applicable message
+  const lastOwnMessageIndex = [...messages]
+    .map((m, i) => ({ ...m, i }))
+    .reverse()
+    .find((m) => m.alias === alias && m.id === otherLastSeenId)?.i;
+
   return (
     <div className="chat-room-wrapper">
       <div className="chat-room fade-in-up">
@@ -207,14 +228,16 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, creatorToken, o
 
         <div className="messages">
           {messages.map((msg, i) => (
-            <MessageBubble
-              key={msg.id || i}
-              message={msg}
-              isOwn={msg.alias === alias}
-              currentAlias={alias}
-              onReact={handleReact}
-              onOpenFullPicker={setReactingMessageId}
-            />
+            <div key={msg.id || i}>
+              <MessageBubble
+                message={msg}
+                isOwn={msg.alias === alias}
+                currentAlias={alias}
+                onReact={handleReact}
+                onOpenFullPicker={setReactingMessageId}
+              />
+              {i === lastOwnMessageIndex && <div className="seen-label">seen</div>}
+            </div>
           ))}
           <div ref={messagesEndRef} />
         </div>

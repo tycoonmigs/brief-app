@@ -144,15 +144,27 @@
 .message-form {
   display: flex;
   gap: 0.5rem;
-  padding: 1rem;
+  padding: 0.75rem;
   border-top: 1px solid var(--color-border);
   background: var(--color-bg-elevated);
   border-radius: 0;
-  flex-shrink: 0; /* stays fixed at the bottom, never scrolls away */
+  flex-shrink: 0;
 }
 
 .message-form input {
   flex: 1;
+  min-width: 0; /* allows the input to actually shrink instead of forcing siblings to overflow */
+}
+
+.message-form button[type='submit'] {
+  flex-shrink: 0; /* send button keeps its full size, never gets squeezed/cut off */
+  white-space: nowrap;
+  padding: 0.5rem 0.9rem;
+}
+
+.file-input-label,
+.emoji-trigger-btn {
+  flex-shrink: 0;
 }
 
 /* room expired */
@@ -542,4 +554,30 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .message-form {
+    gap: 0.35rem;
+    padding: 0.6rem;
+  }
+
+  .message-form button[type='submit'] {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .file-input-label,
+  .emoji-trigger-btn {
+    font-size: 1rem;
+    padding: 0 0.3rem;
+  }
+}
+
+.seen-label {
+  font-size: 0.65rem;
+  color: var(--color-text-dim);
+  text-align: right;
+  margin-top: 0.15rem;
+  padding-right: 0.25rem;
 }
