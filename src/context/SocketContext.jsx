@@ -18,9 +18,6 @@ export const SocketProvider = ({ children }) => {
     socket.on('connect', () => setIsConnected(true));
     socket.on('disconnect', () => setIsConnected(false));
 
-    // cleanup: close the socket when the app unmounts, so we don't
-    // leak connections (important since this only happens once,
-    // but good practice regardless)
     return () => {
       socket.disconnect();
     };

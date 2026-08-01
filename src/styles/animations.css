@@ -20,6 +20,20 @@
   50% { box-shadow: 0 0 14px var(--color-accent-dim); }
 }
 
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.94; }
+  94% { opacity: 1; }
+  96% { opacity: 0.97; }
+  97% { opacity: 1; }
+}
+
+@keyframes scanlineMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100%; }
+}
+
 .fade-in-up {
   animation: fadeInUp 0.25s ease-out;
 }
@@ -32,4 +46,8 @@
 
 .btn-glow:hover {
   animation: glowPulse 1.5s ease-in-out infinite;
+}
+
+.crt-flicker {
+  animation: flicker 6s infinite;
 }

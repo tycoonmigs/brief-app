@@ -1,6 +1,7 @@
 // src/onboarding/Onboarding.jsx
 import { useState } from 'react';
 import onboardingSteps from './onboardingSteps.js';
+import Footer from '../components/Footer.jsx';
 
 const ONBOARDING_KEY = 'brief_onboarding_complete';
 
@@ -23,27 +24,30 @@ const Onboarding = ({ onFinish }) => {
   const step = onboardingSteps[stepIndex];
   const isLastStep = stepIndex === onboardingSteps.length - 1;
 
-    return (
+  return (
     <div className="onboarding-overlay">
-        <div className="onboarding-card fade-in-up">
+      <div className="onboarding-card fade-in-up">
         <h2>{step.title}</h2>
         <p>{step.description}</p>
 
         <div className="onboarding-progress">
-            {onboardingSteps.map((_, i) => (
+          {onboardingSteps.map((_, i) => (
             <span key={i} className={`progress-dot ${i === stepIndex ? 'active' : ''}`} />
-            ))}
+          ))}
         </div>
 
         <div className="onboarding-actions">
-            <button onClick={finish} className="skip-btn">skip</button>
-            <button onClick={handleNext} className="btn-glow next-btn">
+          <button onClick={finish} className="skip-btn">skip</button>
+          <button onClick={handleNext} className="btn-glow next-btn">
             {isLastStep ? 'get started' : 'next'}
-            </button>
+          </button>
         </div>
-        </div>
+      </div>
+      <div className="onboarding-footer-wrap">
+        <Footer />
+      </div>
     </div>
-    );
+  );
 };
 
 export default Onboarding;

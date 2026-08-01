@@ -6,6 +6,8 @@ import TypingIndicator from './TypingIndicator.jsx';
 import Countdown from './Countdown.jsx';
 import RoomExpired from './RoomExpired.jsx';
 import CopyLinkButton from './CopyLinkButton.jsx';
+import Footer from './Footer.jsx';
+import ConnectionStatus from './ConnectionStatus.jsx';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB, matches server-side limit
 
@@ -36,7 +38,7 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, onLeaveRoom }) 
     };
     const handleRoomExpired = () => setExpired(true);
     const handleErrorMessage = ({ error }) => {
-      alert(error); // simple for now — can be replaced with a nicer toast later
+      alert(error);
     };
 
     socket.on('newMessage', handleNewMessage);
@@ -96,38 +98,47 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, onLeaveRoom }) 
   };
 
   if (expired) {
-    return <RoomExpired onReturnHome={onLeaveRoom} />;
+    return (
+      <>
+        <RoomExpired onReturnHome={onLeaveRoom} />
+        <Footer />
+      </>
+    );
   }
 
   return (
-    <div className="chat-room fade-in-up">
-      <div className="chat-header">
-        <div className="header-left">
-          <span className="room-label">room: <strong>{roomCode}</strong></span>
-          <CopyLinkButton roomCode={roomCode} />
+    <div className="chat-room-wrapper">
+      <div className="chat-room fade-in-up">
+        <div className="chat-header">
+          <div className="header-left">
+            <span className="room-label">room: <strong>{roomCode}</strong></span>
+            <CopyLinkButton roomCode={roomCode} />
+          </div>
+          <div className="header-right">
+            <ConnectionStatus />
+            <span className="alias-label">you: <strong>{alias}</strong></span>
+            <Countdown expiresAt={expiresAt} onExpire={() => setExpired(true)} />
+          </div>
         </div>
-        <div className="header-right">
-          <span className="alias-label">you: <strong>{alias}</strong></span>
-          <Countdown expiresAt={expiresAt} onExpire={() => setExpired(true)} />
+
+        <div className="messages">
+          {messages.map((msg, i) => (
+            <MessageBubble key={i} message={msg} isOwn={msg.alias === alias} />
+          ))}
         </div>
+
+        {typingUser && <TypingIndicator alias={typingUser} />}
+
+        <form onSubmit={handleSend} className="message-form">
+          <label className="file-input-label">
+            📎
+            <input type="file" accept="image/*" onChange={handleFileSelect} hidden />
+          </label>
+          <input value={input} onChange={handleChange} placeholder="type a message..." />
+          <button type="submit" className="btn-glow">send</button>
+        </form>
       </div>
-
-      <div className="messages">
-        {messages.map((msg, i) => (
-          <MessageBubble key={i} message={msg} isOwn={msg.alias === alias} />
-        ))}
-      </div>
-
-      {typingUser && <TypingIndicator alias={typingUser} />}
-
-      <form onSubmit={handleSend} className="message-form">
-        <label className="file-input-label">
-          📎
-          <input type="file" accept="image/*" onChange={handleFileSelect} hidden />
-        </label>
-        <input value={input} onChange={handleChange} placeholder="type a message..." />
-        <button type="submit" className="btn-glow">send</button>
-      </form>
+      <Footer />
     </div>
   );
 };

@@ -143,3 +143,37 @@
   display: block;
   margin-top: 0.3rem;
 }
+
+.chat-room-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.chat-room-wrapper .chat-room {
+  flex: 1;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.online {
+  background: var(--color-accent);
+  box-shadow: 0 0 6px var(--color-accent);
+}
+
+.status-dot.offline {
+  background: var(--color-error);
+  animation: pulse-dot 1s ease-in-out infinite;
+}

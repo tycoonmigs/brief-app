@@ -47,3 +47,38 @@
   width: 200px;
   text-align: center;
 }
+
+.landing-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.landing-wrapper .landing {
+  flex: 1;
+}
+
+.landing-explainer {
+  max-width: 420px;
+  font-size: 0.85rem;
+  color: var(--color-text-dim);
+  line-height: 1.6;
+}
+
+.landing-coffee {
+  margin-top: 1rem;
+}
+
+.landing-frame-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.landing-frame-container .terminal-frame {
+  max-width: 480px;
+  width: 100%;
+}

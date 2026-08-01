@@ -2,7 +2,6 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import './theme.css';
 @import './animations.css';
-@import './landing.css';
 
 * {
   box-sizing: border-box;
@@ -10,11 +9,32 @@
   padding: 0;
 }
 
+html, body, #root {
+  height: 100%;
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-mono);
   line-height: 1.5;
+  position: relative;
+}
+
+/* subtle CRT scanline overlay across the whole app */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.015) 0px,
+    rgba(255, 255, 255, 0.015) 1px,
+    transparent 1px,
+    transparent 3px
+  );
 }
 
 button {
@@ -61,4 +81,89 @@ input:focus {
 
 .error {
   color: var(--color-error);
+}
+
+.app-footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+  border-top: 1px solid var(--color-border);
+}
+
+.app-footer a {
+  color: var(--color-accent-dim);
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.footer-sep {
+  margin: 0 0.5rem;
+}
+
+.coffee-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+  text-decoration: none;
+  border: 1px solid var(--color-border);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.coffee-btn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent-dim);
+  box-shadow: var(--glow-sm);
+}
+
+.terminal-frame {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--glow-lg);
+  background: var(--color-bg-elevated);
+}
+
+.terminal-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: #0d120d;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dot-red { background: #ff5f56; }
+.dot-yellow { background: #ffbd2e; }
+.dot-green { background: #27c93f; }
+
+.terminal-title {
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+  flex: 1;
+  text-align: center;
+  margin-right: 2.5rem; /* roughly balances the dots' width so title looks centered */
+}
+
+.terminal-body {
+  padding: 0;
 }

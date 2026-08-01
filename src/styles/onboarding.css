@@ -67,3 +67,15 @@
 .next-btn {
   flex: 1;
 }
+
+.onboarding-footer-wrap {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.onboarding-footer-wrap .app-footer {
+  border-top: none;
+  background: transparent;
+}
