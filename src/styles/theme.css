@@ -1,0 +1,21 @@
+/* src/styles/theme.css */
+:root {
+  --color-bg: #0a0e0a;
+  --color-bg-elevated: #111511;
+  --color-border: #1f2a1f;
+  --color-accent: #39ff88;
+  --color-accent-dim: #2a9e5c;
+  --color-text: #d4f5df;
+  --color-text-dim: #6b8a72;
+  --color-error: #ff5c5c;
+  --color-own-bubble: #16281a;
+  --color-other-bubble: #14181a;
+
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Space Mono', monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  --glow-sm: 0 0 6px var(--color-accent-dim);
+  --glow-md: 0 0 12px var(--color-accent-dim);
+}

@@ -1,0 +1,64 @@
+/* src/styles/global.css */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import './theme.css';
+@import './animations.css';
+@import './landing.css';
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  line-height: 1.5;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-accent-dim);
+  color: var(--color-accent);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  background: var(--color-accent-dim);
+  color: var(--color-bg);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+input {
+  font-family: inherit;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--glow-sm);
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.error {
+  color: var(--color-error);
+}

@@ -1,0 +1,49 @@
+/* src/styles/landing.css */
+.landing {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.landing-title {
+  font-size: 3rem;
+  color: var(--color-accent);
+  text-shadow: var(--glow-md);
+  letter-spacing: -1px;
+}
+
+.landing-title .emoji {
+  filter: grayscale(0%);
+}
+
+.landing-subtitle {
+  color: var(--color-text-dim);
+  font-size: 1rem;
+}
+
+.create-btn {
+  font-size: 1.1rem;
+  padding: 0.75rem 2rem;
+}
+
+.divider {
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.join-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.join-form input {
+  width: 200px;
+  text-align: center;
+}
