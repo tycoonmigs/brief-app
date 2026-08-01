@@ -8,8 +8,13 @@ import RoomExpired from './RoomExpired.jsx';
 import CopyLinkButton from './CopyLinkButton.jsx';
 import Footer from './Footer.jsx';
 import ConnectionStatus from './ConnectionStatus.jsx';
+import SettingsPanel from './SettingsPanel.jsx';
+import EmojiPicker from './EmojiPicker.jsx';
+import { playNotificationSound } from '../utils/notificationSound.js';
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB, matches server-side limit
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
+
+const ALLOWED_FILE_EXTENSIONS = '.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip';
 
 const fileToBase64 = (file) =>
   new Promise((resolve, reject) => {
@@ -19,26 +24,45 @@ const fileToBase64 = (file) =>
     reader.readAsDataURL(file);
   });
 
-const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, onLeaveRoom }) => {
+const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, creatorToken, onLeaveRoom }) => {
   const { socket } = useSocket();
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState('');
   const [typingUser, setTypingUser] = useState(null);
   const [expired, setExpired] = useState(false);
+  const [terminated, setTerminated] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [reactingMessageId, setReactingMessageId] = useState(null);
+  const [showTerminateConfirm, setShowTerminateConfirm] = useState(false);
   const typingTimeoutRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  const isCreator = Boolean(creatorToken);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, typingUser]);
 
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewMessage = (msg) => setMessages((prev) => [...prev, msg]);
+    const handleNewMessage = (msg) => {
+      setMessages((prev) => [...prev, msg]);
+      if (msg.alias !== alias) {
+        playNotificationSound();
+      }
+    };
     const handleUserTyping = ({ alias }) => setTypingUser(alias);
     const handleUserStoppedTyping = () => setTypingUser(null);
     const handleUserLeft = ({ alias }) => {
       setMessages((prev) => [...prev, { alias: 'system', content: `${alias} has left`, type: 'system' }]);
     };
     const handleRoomExpired = () => setExpired(true);
-    const handleErrorMessage = ({ error }) => {
-      alert(error);
+    const handleRoomTerminated = () => setTerminated(true);
+    const handleErrorMessage = ({ error }) => alert(error);
+    const handleReactionUpdate = ({ messageId, reactions }) => {
+      setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, reactions } : m)));
     };
 
     socket.on('newMessage', handleNewMessage);
@@ -46,7 +70,9 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, onLeaveRoom }) 
     socket.on('userStoppedTyping', handleUserStoppedTyping);
     socket.on('userLeft', handleUserLeft);
     socket.on('roomExpired', handleRoomExpired);
+    socket.on('roomTerminated', handleRoomTerminated);
     socket.on('errorMessage', handleErrorMessage);
+    socket.on('reactionUpdate', handleReactionUpdate);
 
     return () => {
       socket.off('newMessage', handleNewMessage);
@@ -54,9 +80,11 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, onLeaveRoom }) 
       socket.off('userStoppedTyping', handleUserStoppedTyping);
       socket.off('userLeft', handleUserLeft);
       socket.off('roomExpired', handleRoomExpired);
+      socket.off('roomTerminated', handleRoomTerminated);
       socket.off('errorMessage', handleErrorMessage);
+      socket.off('reactionUpdate', handleReactionUpdate);
     };
-  }, [socket]);
+  }, [socket, alias]);
 
   const handleSend = (e) => {
     e.preventDefault();
@@ -69,11 +97,28 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, onLeaveRoom }) 
   const handleChange = (e) => {
     setInput(e.target.value);
     socket.emit('typing');
-
     clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      socket.emit('stopTyping');
-    }, 1500);
+    typingTimeoutRef.current = setTimeout(() => socket.emit('stopTyping'), 1500);
+  };
+
+  const handleImageSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      alert('File too large (max 2MB)');
+      e.target.value = '';
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      alert('Only images are supported here — use the 📎 button for other file types');
+      e.target.value = '';
+      return;
+    }
+
+    const base64 = await fileToBase64(file);
+    socket.emit('sendMessage', { content: base64, type: 'image' });
+    e.target.value = '';
   };
 
   const handleFileSelect = async (e) => {
@@ -86,16 +131,44 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, onLeaveRoom }) 
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
-      alert('Only images are supported right now');
-      e.target.value = '';
-      return;
-    }
-
     const base64 = await fileToBase64(file);
-    socket.emit('sendMessage', { content: base64, type: 'image' });
+    socket.emit('sendMessage', { content: base64, type: 'file', fileName: file.name });
     e.target.value = '';
   };
+
+  const handleReact = (messageId, emoji) => {
+    socket.emit('reactToMessage', { messageId, emoji });
+  };
+
+  const handleEmojiSelectForInput = (emoji) => {
+    setInput((prev) => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const handleEmojiSelectForReaction = (emoji) => {
+    if (reactingMessageId) {
+      handleReact(reactingMessageId, emoji);
+    }
+    setReactingMessageId(null);
+  };
+
+  const handleTerminate = () => {
+    socket.emit('terminateRoom', { creatorToken });
+    setShowTerminateConfirm(false);
+  };
+
+  if (terminated) {
+    return (
+      <>
+        <div className="room-expired fade-in-up">
+          <h2>this room was ended by its creator</h2>
+          <p>all messages have been permanently deleted.</p>
+          <button onClick={onLeaveRoom} className="btn-glow">return home</button>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   if (expired) {
     return (
@@ -109,6 +182,11 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, onLeaveRoom }) 
   return (
     <div className="chat-room-wrapper">
       <div className="chat-room fade-in-up">
+        <div className="chat-brand">
+          <span className="chat-brand-logo">🩲</span>
+          <span className="chat-brand-name">brief</span>
+        </div>
+
         <div className="chat-header">
           <div className="header-left">
             <span className="room-label">room: <strong>{roomCode}</strong></span>
@@ -118,27 +196,74 @@ const ChatRoom = ({ roomCode, alias, initialMessages, expiresAt, onLeaveRoom }) 
             <ConnectionStatus />
             <span className="alias-label">you: <strong>{alias}</strong></span>
             <Countdown expiresAt={expiresAt} onExpire={() => setExpired(true)} />
+            {isCreator && (
+              <button type="button" className="terminate-btn" onClick={() => setShowTerminateConfirm(true)}>
+                end room
+              </button>
+            )}
+            <button type="button" className="settings-btn" onClick={() => setShowSettings(true)}>⚙</button>
           </div>
         </div>
 
         <div className="messages">
           {messages.map((msg, i) => (
-            <MessageBubble key={i} message={msg} isOwn={msg.alias === alias} />
+            <MessageBubble
+              key={msg.id || i}
+              message={msg}
+              isOwn={msg.alias === alias}
+              currentAlias={alias}
+              onReact={handleReact}
+              onOpenFullPicker={setReactingMessageId}
+            />
           ))}
+          <div ref={messagesEndRef} />
         </div>
 
         {typingUser && <TypingIndicator alias={typingUser} />}
 
         <form onSubmit={handleSend} className="message-form">
-          <label className="file-input-label">
-            📎
-            <input type="file" accept="image/*" onChange={handleFileSelect} hidden />
+          <label className="file-input-label" title="send an image">
+            🖼️
+            <input type="file" accept="image/*" onChange={handleImageSelect} hidden />
           </label>
+          <label className="file-input-label" title="send a file">
+            📎
+            <input type="file" accept={ALLOWED_FILE_EXTENSIONS} onChange={handleFileSelect} hidden />
+          </label>
+          <button type="button" className="emoji-trigger-btn" onClick={() => setShowEmojiPicker(true)}>
+            😊
+          </button>
           <input value={input} onChange={handleChange} placeholder="type a message..." />
           <button type="submit" className="btn-glow">send</button>
         </form>
       </div>
+
       <Footer />
+
+      {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
+      {showEmojiPicker && (
+        <EmojiPicker onSelect={handleEmojiSelectForInput} onClose={() => setShowEmojiPicker(false)} />
+      )}
+      {reactingMessageId && (
+        <EmojiPicker onSelect={handleEmojiSelectForReaction} onClose={() => setReactingMessageId(null)} />
+      )}
+
+      {showTerminateConfirm && (
+        <div className="settings-overlay modal-fade-in" onClick={() => setShowTerminateConfirm(false)}>
+          <div className="confirm-panel modal-scale-in" onClick={(e) => e.stopPropagation()}>
+            <h3>end this room?</h3>
+            <p>this will immediately delete the room and all messages for both people. this can't be undone.</p>
+            <div className="confirm-actions">
+              <button type="button" className="skip-btn" onClick={() => setShowTerminateConfirm(false)}>
+                cancel
+              </button>
+              <button type="button" className="terminate-confirm-btn" onClick={handleTerminate}>
+                end room now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

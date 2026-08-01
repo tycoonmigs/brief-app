@@ -82,3 +82,11 @@
   max-width: 480px;
   width: 100%;
 }
+
+.landing-name-meaning {
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+  font-style: italic;
+  max-width: 380px;
+  line-height: 1.5;
+}

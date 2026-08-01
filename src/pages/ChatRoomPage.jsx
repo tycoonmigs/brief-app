@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import useSocket from '../hooks/useSocket.js';
 import ChatRoom from '../components/ChatRoom.jsx';
 
-const ChatRoomPage = ({ roomCode, onLeaveRoom }) => {
+const ChatRoomPage = ({ roomCode, creatorToken, onLeaveRoom }) => {
   const { socket } = useSocket();
   const [alias, setAlias] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -35,6 +35,7 @@ const ChatRoomPage = ({ roomCode, onLeaveRoom }) => {
       alias={alias}
       initialMessages={messages}
       expiresAt={expiresAt}
+      creatorToken={creatorToken}
       onLeaveRoom={onLeaveRoom}
     />
   );

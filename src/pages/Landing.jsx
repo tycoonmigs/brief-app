@@ -13,12 +13,11 @@ const Landing = ({ onRoomReady }) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${import.meta.env.VITE_SOCKET_URL}/api/rooms`, {
-        method: 'POST',
-      });
+      const res = await fetch(`${import.meta.env.VITE_SOCKET_URL}/api/rooms`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create room');
-      onRoomReady(data.code);
+      // pass both code AND creatorToken — only present because THIS response came from creation
+      onRoomReady(data.code, data.creatorToken);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -35,7 +34,8 @@ const Landing = ({ onRoomReady }) => {
       const res = await fetch(`${import.meta.env.VITE_SOCKET_URL}/api/rooms/${joinCode.trim()}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Room not found');
-      onRoomReady(data.code);
+      // no creatorToken here — this person joined, they didn't create it
+      onRoomReady(data.code, null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -52,6 +52,10 @@ const Landing = ({ onRoomReady }) => {
               brief <span className="emoji">🩲</span>
             </h1>
             <p className="landing-subtitle cursor-blink">private. temporary. no trace.</p>
+
+            <p className="landing-name-meaning">
+              "brief" — as in short-lived. these chats don't stick around, and neither should your data.
+            </p>
 
             <p className="landing-explainer">
               create a room, share the code with one other person, and talk freely.
